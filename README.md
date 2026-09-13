@@ -1,128 +1,151 @@
 <p align="center">
-  <img src="./docs/readme-banner.svg" alt="AI Agents animated project banner" width="100%" />
+  <img src="./docs/readme-banner.svg" alt="AI Agents project banner" width="100%" />
 </p>
 
 <p align="center">
-  <a href="#running-it"><img src="./docs/actions/run.svg" alt="Run AI Agents locally" width="250" /></a>
-  <a href="https://github.com/itaygoldenberg/ai-agents"><img src="./docs/actions/source.svg" alt="View the AI Agents source" width="250" /></a>
-  <a href="https://github.com/itaygoldenberg?tab=repositories"><img src="./docs/actions/github.svg" alt="More projects by Itay Goldenberg" width="250" /></a>
-  <a href="https://www.linkedin.com/in/itay-goldenberg/"><img src="./docs/actions/linkedin.svg" alt="Connect with Itay Goldenberg on LinkedIn" width="250" /></a>
+  <a href="#running-locally"><img src="./docs/actions/run.svg" alt="Run locally" width="250" /></a>
+  <a href="https://github.com/itaygoldenberg/ai-agents"><img src="./docs/actions/source.svg" alt="View source" width="250" /></a>
+  <a href="https://github.com/itaygoldenberg?tab=repositories"><img src="./docs/actions/github.svg" alt="More projects" width="250" /></a>
+  <a href="https://www.linkedin.com/in/itay-goldenberg/"><img src="./docs/actions/linkedin.svg" alt="LinkedIn" width="250" /></a>
 </p>
-
-> [!NOTE]
-> Two LangChain agents that choose their own tools, and a log that proves which ones they actually called.
 
 <p align="center">
   <a href="#overview">Overview</a>&nbsp;&middot;&nbsp;
   <a href="#features">Features</a>&nbsp;&middot;&nbsp;
+  <a href="#workflow">Workflow</a>&nbsp;&middot;&nbsp;
   <a href="#technology">Technology</a>&nbsp;&middot;&nbsp;
-  <a href="#project-structure">Project structure</a>&nbsp;&middot;&nbsp;
-  <a href="#running-it">Running it</a>&nbsp;&middot;&nbsp;
-  <a href="#notes">Notes</a>
+  <a href="#running-locally">Running locally</a>
 </p>
+
+> [!NOTE]
+> A full-stack course portfolio project by Itay Goldenberg. Fetch website HTML or current weather through model-selected tools.
 
 ## Overview
 
-A model on its own can only produce text. An agent is a model plus a set of tools and permission to call them: you describe each tool, the model picks one, the runtime executes it, and the result comes back for the model to read.
+This repository contains two independent terminal applications. Summary Agent fetches a webpage and asks the model for a one-sentence summary. Weather Agent fetches a city’s current weather from wttr.in.
 
-The description is the interface. The model never sees the implementation, only the name, the description and the argument schema. A vague description is a tool the model will reach for at the wrong moment, which makes writing them a design task rather than documentation.
+Each application defines its own LangChain agent, Zod tool schema, configuration and logger. The tool result returns to the agent, which uses it to produce the final response.
+
+<table><tr><td align="center" width="25%"><strong>2 APPS</strong><br /><sub>independent agents</sub></td><td align="center" width="25%"><strong>HTML</strong><br /><sub>website summary</sub></td><td align="center" width="25%"><strong>WEATHER</strong><br /><sub>city lookup</sub></td><td align="center" width="25%"><strong>LANGCHAIN</strong><br /><sub>typed tool calls</sub></td></tr></table>
 
 | Project detail | Implementation |
 |---|---|
-| Summary Agent | Takes a long text and returns a summary, calling tools when it needs something it cannot infer |
-| Weather Agent | Answers weather questions by fetching live data instead of guessing |
-| Framework | LangChain |
-| Schemas | Zod describes each tool's arguments |
-| Runtime | Node.js and TypeScript, run from the terminal |
+| LangChain + OpenAI | Both agents |
+| Zod | URL and city argument schemas |
+| Node.js fetch | Webpage and weather requests |
+| TypeScript + tsx | Independent terminal programs |
 
 ## Contents
 
 - [Overview](#overview)
 - [Features](#features)
+- [Workflow](#workflow)
 - [Technology](#technology)
 - [Project structure](#project-structure)
-- [Running it](#running-it)
-- [Notes](#notes)
+- [Running locally](#running-locally)
+- [Checks](#checks)
+- [Additional details](#additional-details)
+- [Operational notes](#operational-notes)
+- [Author](#author)
 
 ## Features
 
-### The model decides, the runtime acts
+### Website summary
 
-Nothing is hard-coded into a flow. The model reads the descriptions, chooses a tool and supplies the arguments, and only then does anything happen.
+The get-html tool validates the URL, fetches raw HTML and returns its first 20,000 characters. The system prompt asks for one short sentence.
 
-### One schema, two jobs
+### Current weather lookup
 
-Zod validates the arguments and tells the model what shape to send. Writing it twice would let the two drift apart; writing it once means they cannot.
+The get-weather tool URL-encodes the city and requests wttr.in with `format=3`.
 
-### A tool for what the model cannot know
+### Separate application configuration
 
-A model has no clock and no network. Asked for the current weather it will answer confidently and wrongly. A tool is what turns a guess into a fact.
+Each folder has its own package.json, `.env.example`, terminal entry point and dependencies.
 
-### Visible reasoning
+### Tool message logging
 
-The run prints each step: the tool chosen, the arguments sent, the result returned. That log is the only way to tell a model that called a tool from one that merely described calling it.
+The logger shows returned agent and tool messages, making executed operations inspectable.
+
+## Workflow
+
+<p align="center">
+  <img src="./docs/workflow.svg" alt="TERMINAL → SELECTED AGENT → FETCH TOOL → MODEL RESPONSE" width="100%" />
+</p>
+
+1. **TERMINAL:** Ask about a website or a city.
+2. **SELECTED AGENT:** Summary Agent or Weather Agent.
+3. **FETCH TOOL:** HTML excerpt or wttr.in response.
+4. **MODEL RESPONSE:** One-sentence summary or weather answer.
 
 ## Technology
 
 <p align="center">
-  <img src="./docs/tech-strip.svg" alt="AI Agents technologies" width="100%" />
+  <img src="./docs/tech-strip.svg" alt="AI Agents technology stack" width="100%" />
 </p>
 
 | Technology | Role |
 |---|---|
-| LangChain | Agent loop and tool binding |
-| OpenAI | The model behind both agents |
-| Zod | Tool argument schemas |
-| TypeScript | Both agents |
-| Node.js | Terminal runtime |
+| LangChain + OpenAI | Both agents |
+| Zod | URL and city argument schemas |
+| Node.js fetch | Webpage and weather requests |
+| TypeScript + tsx | Independent terminal programs |
 
 ## Project structure
 
 ```text
-AI Agents/
-|-- Summary Agent/
-|   `-- src/
-|       |-- agent/           the agent and its tools
-|       `-- utils/
-|-- Weather Agent/
-|   `-- src/
-|       |-- agent/
-|       `-- utils/
-`-- docs/                    README artwork only
+Summary Agent/
+  src/agent/       Summary agent, HTML tool and logger
+  src/utils/       Config and terminal input
+Weather Agent/
+  src/agent/       Weather agent, weather tool and logger
+  src/utils/       Config and terminal input
+docs/              README artwork
 ```
 
-## Running it
+## Running locally
 
-Each agent runs on its own.
+Clone the repository, then follow the application-specific steps below. Commands assume the repository root unless a directory change is shown.
+
+```bash
+git clone https://github.com/itaygoldenberg/ai-agents.git
+cd ai-agents
+```
+
+Use Node.js with built-in fetch. Start either application from its own directory:
 
 ```bash
 cd "Summary Agent"
 ```
 
-```bash
-npm install
-```
-
-```bash
-npm start
-```
-
-The Weather Agent is the same three commands in its own folder.
-
-## Environment
-
-Copy `.env.example` to `.env` and fill in your own values:
+Copy `.env.example` to `.env` in this application directory and configure it before starting:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-`.env` is ignored by git. A key that reaches GitHub is public from the moment it is pushed.
+```bash
+npm install
+npm start
+```
 
-## Notes
+For the second application, open a terminal at the repository root, enter `Weather Agent`, and repeat the environment setup, installation and start commands. Each application needs its own `.env`.
 
-- Each agent keeps its own `.env` and its own dependencies. They are two programs that happen to share a folder, not one program with two modes.
-- If an agent answers without calling a tool, the description is usually the reason. Sharpening it changes the behaviour more reliably than changing the prompt around it.
+## Checks
+
+Neither application defines a build or automated test script. Run the summary agent against a small public page and compare its response with the page. Run the weather agent with a city name and verify the get-weather tool result. Both checks consume model API usage.
+
+These are available build commands and suggested manual checks, not a claim that a full integration test suite is included.
+
+## Additional details
+
+| Application | Tool input | External result |
+|---|---|---|
+| Summary Agent | Website URL | First 20,000 characters of fetched HTML |
+| Weather Agent | City name | wttr.in text response |
+
+## Operational notes
+
+The HTML tool fetches the response body without running browser JavaScript, so client-rendered pages may provide little content. Weather availability depends on wttr.in. Both tools return fetch errors as strings. Logged execution messages are not private model reasoning.
 
 ## Author
 
@@ -133,5 +156,5 @@ OPENAI_API_KEY=your_openai_api_key
 
 <p align="center">
   <a href="https://github.com/itaygoldenberg"><img src="./docs/actions/github.svg" alt="Itay Goldenberg on GitHub" width="250" /></a>
-  <a href="https://www.linkedin.com/in/itay-goldenberg/"><img src="./docs/actions/linkedin.svg" alt="Itay Goldenberg on LinkedIn" width="250" /></a>
+  <a href="https://www.linkedin.com/in/itay-goldenberg/"><img src="./docs/actions/linkedin.svg" alt="Connect on LinkedIn" width="250" /></a>
 </p>
