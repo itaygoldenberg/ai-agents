@@ -1,0 +1,11 @@
+node_modules
+.env
+
+# Build output - a VITE_ value is baked into these, so an ignored .env is
+# not enough on its own.
+dist/
+build/
+
+# Also cover .env.local and friends
+.env.*
+!.env.example
